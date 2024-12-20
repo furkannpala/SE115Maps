@@ -1,52 +1,179 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+
 public class CountryMap {
     private City[] cities;
-    private int cityCount;
+    private Route[] routes;
+    private City startCity;
+    private City endCity;
 
-    public CountryMap(int maxCities) {
-        this.cities = new City[maxCities];
-        this.cityCount = 0;
-    }
-
-    public void addCity(String label, int maxRoutes) {
-        if (findCity(label) == null) {
-            cities[cityCount] = new City(label, maxRoutes);
-            cityCount++;
+    public boolean readDocs(String filePath) {
+        File file = new File(filePath);
+        if (!file.exists()) {
+            System.out.println("File does not exist: " + file.getAbsolutePath());
+            return false;
         }
-    }
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            int lineNumber = 1;
 
-    public void addRoute(String fromLabel, String toLabel, int time) {
-        City fromCity = findCity(fromLabel);
-        City toCity = findCity(toLabel);
+            String line = reader.readLine();
+            if (line == null || line.trim().isEmpty()) {
+                System.err.println("Error Line " + lineNumber + ": City count is missing or invalid.");
+                return false;
+            }
 
-        if (fromCity != null && toCity != null) {
-            fromCity.addNeighbor(toLabel, time);
-            toCity.addNeighbor(fromLabel, time);
+            int cityCount;
+            try {
+                cityCount = Integer.parseInt(line.trim());
+                if (cityCount <= 0) {
+                    System.err.println("Error Line " + lineNumber + ": City count must be a positive integer.");
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                System.err.println("Error Line " + lineNumber + ": City count is not a valid integer.");
+                return false;
+            }
+            System.out.println("City Count: " + cityCount);
+            lineNumber++;
+
+            line = reader.readLine();
+            if (line == null || line.trim().isEmpty()) {
+                System.err.println("Error Line " + lineNumber + ": City labels are missing.");
+                return false;
+            }
+            String[] txtCities = line.trim().split(" ");
+            if (txtCities.length != cityCount) {
+                System.err.println("Error Line " + lineNumber + ": Number of city labels does not match city count.");
+                return false;
+            }
+            cities = new City[cityCount];
+            System.out.print("Cities: ");
+            for (int i = 0; i < txtCities.length; i++) {
+                String txtCity = txtCities[i];
+                System.out.print(txtCity + " ");
+                cities[i] = new City(txtCity);
+            }
+            System.out.println();
+            lineNumber++;
+
+            line = reader.readLine();
+            if (line == null || line.trim().isEmpty()) {
+                System.err.println("Error Line " + lineNumber + ": Route count is missing or invalid.");
+                return false;
+            }
+            int routeCount;
+            try {
+                routeCount = Integer.parseInt(line.trim());
+                if (routeCount < 0) {
+                    System.err.println("Error Line " + lineNumber + ": Route count must be a non-negative integer.");
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                System.err.println("Error Line " + lineNumber + ": Route count is not a valid integer.");
+                return false;
+            }
+            System.out.println("Routes Count: " + routeCount);
+            lineNumber++;
+
+            routes = new Route[routeCount];
+            for (int i = 0; i < routeCount; i++) {
+                line = reader.readLine();
+                if (line == null || line.trim().isEmpty()) {
+                    System.err.println("Error Line " + lineNumber + ": Route information is missing.");
+                    return false;
+                }
+                String[] routeData = line.trim().split(" ");
+                if (routeData.length != 3) {
+                    System.err.println("Error Line " + lineNumber + ": Route must have exactly 3 elements (start city, end city, time).");
+                    return false;
+                }
+                City from = findCity(routeData[0]);
+                if (from == null) {
+                    System.err.println("Error Line " + lineNumber + ": Start city " + routeData[0] + " is not valid.");
+                    return false;
+                }
+                City to = findCity(routeData[1]);
+                if (to == null) {
+                    System.err.println("Error Line " + lineNumber + ": End city " + routeData[1] + " is not valid.");
+                    return false;
+                }
+                int duration;
+                try {
+                    duration = Integer.parseInt(routeData[2]);
+                    if (duration <= 0) {
+                        System.err.println("Error Line " + lineNumber + ": Route duration must be a positive integer.");
+                        return false;
+                    }
+                } catch (NumberFormatException e) {
+                    System.err.println("Error Line " + lineNumber + ": Route duration is not a valid integer.");
+                    return false;
+                }
+                routes[i] = new Route(from, to, duration);
+                lineNumber++;
+            }
+
+            System.out.println("Routes:");
+            for (Route route : routes) {
+                System.out.println("Starting: " + route.getStartCity().getLabel() +
+                        ", Finish: " + route.getEndCity().getLabel() +
+                        ", Duration: " + route.getTime());
+            }
+
+            line = reader.readLine();
+            if (line == null || line.trim().isEmpty()) {
+                System.err.println("Error Line " + lineNumber + ": Starting and ending cities are missing.");
+                return false;
+            }
+            String[] startEnd = line.trim().split(" ");
+            if (startEnd.length != 2) {
+                System.err.println("Error Line " + lineNumber + ": Starting and ending cities must be exactly 2 elements.");
+                return false;
+            }
+            startCity = findCity(startEnd[0]);
+            if (startCity == null) {
+                System.err.println("Error Line " + lineNumber + ": Starting city " + startEnd[0] + " is not valid.");
+                return false;
+            }
+            endCity = findCity(startEnd[1]);
+            if (endCity == null) {
+                System.err.println("Error Line " + lineNumber + ": Ending city " + startEnd[1] + " is not valid.");
+                return false;
+            }
+
+            System.out.println("Starting City: " + startCity.getLabel() +
+                    ", Finish City: " + endCity.getLabel());
+
+            System.out.println("File read successfully!");
+        } catch (IOException e) {
+            System.err.println("An error occurred while accessing the file: " + e.getMessage());
         }
+        return true;
     }
 
-    public City findCity(String label) {
-        for (int i = 0; i < cityCount; i++) {
-            if (cities[i].getLabel().equals(label)) {
-                return cities[i];
+    private City findCity(String cityName) {
+        for (City city : cities) {
+            if (city.getLabel().equals(cityName)) {
+                return city;
             }
         }
         return null;
     }
 
     public City[] getCities() {
-        City[] cityCopy = new City[cityCount];
-        for (int i = 0; i < cityCount; i++) {
-            cityCopy[i] = cities[i];
-        }
-        return cityCopy;
+        return cities;
     }
 
-    public int getCityIndex(String label) {
-        for (int i = 0; i < cityCount; i++) {
-            if (cities[i].getLabel().equals(label)) {
-                return i;
-            }
-        }
-        return -1;
+    public Route[] getRoutes() {
+        return routes;
+    }
+
+    public City getStartCity() {
+        return startCity;
+    }
+
+    public City getEndCity() {
+        return endCity;
     }
 }
