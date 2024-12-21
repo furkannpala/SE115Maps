@@ -1,7 +1,6 @@
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
 
 public class CountryMap {
     private City[] cities;
@@ -15,15 +14,16 @@ public class CountryMap {
             System.out.println("File does not exist: " + file.getAbsolutePath());
             return false;
         }
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+
+        try (Scanner scanner = new Scanner(file)) {
             int lineNumber = 1;
 
-            String line = reader.readLine();
-            if (line == null || line.trim().isEmpty()) {
+            if (!scanner.hasNextLine()) {
                 System.err.println("Error Line " + lineNumber + ": City count is missing or invalid.");
                 return false;
             }
 
+            String line = scanner.nextLine();
             int cityCount;
             try {
                 cityCount = Integer.parseInt(line.trim());
@@ -38,11 +38,12 @@ public class CountryMap {
             System.out.println("City Count: " + cityCount);
             lineNumber++;
 
-            line = reader.readLine();
-            if (line == null || line.trim().isEmpty()) {
+            if (!scanner.hasNextLine()) {
                 System.err.println("Error Line " + lineNumber + ": City labels are missing.");
                 return false;
             }
+
+            line = scanner.nextLine();
             String[] txtCities = line.trim().split(" ");
             if (txtCities.length != cityCount) {
                 System.err.println("Error Line " + lineNumber + ": Number of city labels does not match city count.");
@@ -58,11 +59,12 @@ public class CountryMap {
             System.out.println();
             lineNumber++;
 
-            line = reader.readLine();
-            if (line == null || line.trim().isEmpty()) {
+            if (!scanner.hasNextLine()) {
                 System.err.println("Error Line " + lineNumber + ": Route count is missing or invalid.");
                 return false;
             }
+
+            line = scanner.nextLine();
             int routeCount;
             try {
                 routeCount = Integer.parseInt(line.trim());
@@ -79,11 +81,12 @@ public class CountryMap {
 
             routes = new Route[routeCount];
             for (int i = 0; i < routeCount; i++) {
-                line = reader.readLine();
-                if (line == null || line.trim().isEmpty()) {
+                if (!scanner.hasNextLine()) {
                     System.err.println("Error Line " + lineNumber + ": Route information is missing.");
                     return false;
                 }
+
+                line = scanner.nextLine();
                 String[] routeData = line.trim().split(" ");
                 if (routeData.length != 3) {
                     System.err.println("Error Line " + lineNumber + ": Route must have exactly 3 elements (start city, end city, time).");
@@ -121,11 +124,12 @@ public class CountryMap {
                         ", Duration: " + route.getTime());
             }
 
-            line = reader.readLine();
-            if (line == null || line.trim().isEmpty()) {
+            if (!scanner.hasNextLine()) {
                 System.err.println("Error Line " + lineNumber + ": Starting and ending cities are missing.");
                 return false;
             }
+
+            line = scanner.nextLine();
             String[] startEnd = line.trim().split(" ");
             if (startEnd.length != 2) {
                 System.err.println("Error Line " + lineNumber + ": Starting and ending cities must be exactly 2 elements.");
@@ -146,9 +150,10 @@ public class CountryMap {
                     ", Finish City: " + endCity.getLabel());
 
             System.out.println("File read successfully!");
-        } catch (IOException e) {
-            System.err.println("An error occurred while accessing the file: " + e.getMessage());
+        } catch (FileNotFoundException e) {
+            System.err.println("File not found: " + e.getMessage());
         }
+
         return true;
     }
 
