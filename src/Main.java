@@ -4,8 +4,15 @@ import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) {
+        if (args.length < 1) {
+            System.out.println("Usage: java Main <inputFileName>");
+            return;
+        }
+
+        String inputFileName = args[0]; // Kullanıcının verdiği dosya adı
+
         CountryMap map = new CountryMap();
-        boolean readSuccessful = map.readDocs("map1.txt");
+        boolean readSuccessful = map.readDocs(inputFileName);
         if (!readSuccessful) {
             System.out.println("Exiting...");
             return;
